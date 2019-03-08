@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jesús Vélez Santiago: jvelez@lcg.unam.mx" />
+
+<meta name="date" content="2019-03-07" />
+
+<title>Motif analysis on OTX2 ChIP-seq peaks</title>
+
+<script src="velez_jesus_chip-seq_analysis_report_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="velez_jesus_chip-seq_analysis_report_files/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
+<script src="velez_jesus_chip-seq_analysis_report_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="velez_jesus_chip-seq_analysis_report_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="velez_jesus_chip-seq_analysis_report_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="velez_jesus_chip-seq_analysis_report_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="velez_jesus_chip-seq_analysis_report_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="velez_jesus_chip-seq_analysis_report_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="velez_jesus_chip-seq_analysis_report_files/navigation-1.1/tabsets.js"></script>
+<script src="velez_jesus_chip-seq_analysis_report_files/navigation-1.1/codefolding.js"></script>
+<link href="velez_jesus_chip-seq_analysis_report_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="velez_jesus_chip-seq_analysis_report_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Motif analysis on OTX2 ChIP-seq peaks</h1>
+<h3 class="subtitle"><em>LCG BEII personal work – 2019</em></h3>
+<h4 class="author"><em>Jesús Vélez Santiago: <a href="mailto:jvelez@lcg.unam.mx">jvelez@lcg.unam.mx</a></em></h4>
+<h4 class="date"><em>2019-03-07</em></h4>
+
+</div>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Transcription factors are proteins that modulate the expression of target genes through the binding on DNA cis-regulatory elements. So the development of techniques that aim to identify DNA binding sites associated with proteins has had a breakthrough. One of those that has fulfilled this purpose on a large scale combines the immunoprecipitation of chromatin (ChIP) with DNA sequencing, giving rise to the ChIP-seq technique. A ChIP-seq experiment usually has hundreds of thousands of predicted sites (regularly called <em>ChIP-seq peaks</em>). These peaks are mapped to a reference genome to find possible binding patterns (also known as <em>motifs</em>) for the protein of interest. The present research seeks to find if there are other motifs in the human genome different from those found in databases such as Jaspar and Hocomoco of the transcriptional factor OTX2 (orthodenticle homeobox 2) that plays an important role in brain, craniofacial, and sensory organs development. To achieve this, the factor peaks from the ReMap database were used in combination with the tools provided by RSAT sofware.</p>
+</div>
+<div id="methods" class="section level2">
+<h2>Methods</h2>
+<div id="getting-peaks-from-remap" class="section level3">
+<h3>Getting peaks from ReMap</h3>
+<p>A connection to ReMap was established. The OTX2 factor was searched and the peaks for MACS were downloaded in BED format (See Supplementary material, Table 3). Subsequently, the GSE ID was saved and the structure of the peak file was verified based on the fields specified in the ReMap entry to avoid inconsistencies.</p>
+</div>
+<div id="getting-motifs-from-reference-databases" class="section level3">
+<h3>Getting motifs from reference databases</h3>
+<p>Taking advantage of the fact that RSAT contains a database in which it stores matrices in transfac format of different <em>TF binding motifs databases</em> (e.g. Jaspar, Hocomoco) it was decided to create a script that established a connection with RSAT in order to obtain different matrices given a file with the identifiers and databases to search for the factors. (See Supplementary material, Table 4).</p>
+</div>
+<div id="discovering-motifs-with-rsat-peak-motifs" class="section level3">
+<h3>Discovering motifs with RSAT peak-motifs</h3>
+<p>To obtain the sequences of the peaks we used the <em>fetch-sequences</em> tool of RSAT. As a negative control, random genome fragments of the same length as the mapped sequences were generated (See Supplementary material, Table 3). Later these two datasets were used to find the motifs of the peak sequences using the RSAT <em>peak-motifs</em> web tool (See Supplementary material, Parameters RSAT web - peak-motifs).</p>
+</div>
+<div id="motif-enrichment-analysis" class="section level3">
+<h3>Motif enrichment analysis</h3>
+<p>In order to know if the peaks were enriched in the reference motifs, the RSAT <em>matrix-quality</em> tool was used. The Markov order was changed to avoid the low representativeness that order 0 could mean. (See Supplementary material, Parameters RSAT web - matrix-quality).</p>
+</div>
+</div>
+<div id="results-and-discussion" class="section level2">
+<h2>Results and discussion</h2>
+<p>The results of the peak-motifs and quality-matrix tools are shown on a web page, so they were downloaded. The information to consult them is available in the supplementary material.<br />
+In the present study there are <span class="math inline">\(15952\)</span> peaks of <span class="math inline">\(15966\)</span> registered in the ReMap database. The reason for the difference is still unknown but since it is small it was decided to continue working with this data set.</p>
+<div id="peak-motifs" class="section level3">
+<h3>Peak-motifs</h3>
+<div id="sequence-composition" class="section level4">
+<h4>Sequence composition</h4>
+<p>In this study it is observed that most of the sequences have an average length of <span class="math inline">\(247bp\)</span>, <span class="math inline">\(159bp\)</span> minimum, <span class="math inline">\(1000bp\)</span> maximum, and a total length of <span class="math inline">\(3951kb\)</span> (<strong>Figure 1</strong>). The nucleotide composition profile shows that there is a higher percentage of AT (<span class="math inline">\(60\%\)</span>) compared with GC (<span class="math inline">\(40\%\)</span>) (<strong>Figure 2</strong>), in addition, in the positional distribution for each dinucleotide shows a greater occurrence of AA, TT, AT and a lower occurrence of GC (<strong>Figure 3</strong>).</p>
+<div class="figure" style="text-align: center">
+<img src="figures/length_distribution-1.png" alt="Length distribution of the sequences of OTX2. avg: 247bp, min:159bp, max: 1000, Total sequence size: 3951kb" width="960" />
+<p class="caption">
+Length distribution of the sequences of OTX2. avg: 247bp, min:159bp, max: 1000, Total sequence size: 3951kb
+</p>
+</div>
+<div class="figure" style="text-align: center">
+<img src="figures/unnamed-chunk-2-1.png" alt="Individual nucleotide composition profile." width="960" />
+<p class="caption">
+Individual nucleotide composition profile.
+</p>
+</div>
+<div class="figure" style="text-align: center">
+<img src="figures/unnamed-chunk-3-1.png" alt="Dinucleotide composition profiles." width="960" />
+<p class="caption">
+Dinucleotide composition profiles.
+</p>
+</div>
+</div>
+<div id="reference-motifs" class="section level4">
+<h4>Reference Motifs</h4>
+The reference motifs were downloaded from the database repositories of motifs contained in RSAT (transfac format) (See Supplementary material, Table 4), in this case, the selected databases were Jaspar and Hocomoco. Both reference motifs have similar information, resulting in almost identical logos but in complementary reverse (<strong>Figure 4</strong>). The main difference could be the length of the logos as well as the amount of information provided by each of these.
+<div class="figure" style="text-align: center">
+<img src="figures/unnamed-chunk-4-1.png" alt="Jaspar, Hocomoco reference motifs of OTX2 per row, respectively." width="960" />
+<p class="caption">
+Jaspar, Hocomoco reference motifs of OTX2 per row, respectively.
+</p>
+</div>
+</div>
+<div id="discovered-motifs-by-algorithm" class="section level4">
+<h4>Discovered motifs (by algorithm)</h4>
+<p>Supplementary material Parameters RSAT web - peak-motifs shows where to find the full list of discovered motifs by algorithm (<em>oligo-analysis</em>, <em>position-analysis</em>) for each selected k-mer size (<span class="math inline">\(6\)</span>,<span class="math inline">\(7\)</span>). It is also important to note that the algorithm converts the e-value (expected number of false positives) to a value of significance dictated by the formula: <span class="math inline">\(-log10(e-value)\)</span>. The scores for the most significant motifs are shown in bold red. In this research, the <em>GGATTA</em> motif is overrepresented with a significance of <span class="math inline">\(152\)</span>. The same motif in complementary reversal is found by <em>position-analysis</em> but with a significance of <span class="math inline">\(300\)</span>. It is noteworthy that these motifs correspond to the reference motives (not used in this analysis) which tells us that these are the most relevant in terms of overrepresentation, but there is another motif that is almost equally significant and is <em>TGA[CA]TCA</em> ({oligo, position}_6nt(?:_mkv4)_m2), with a significance of <span class="math inline">\(143\)</span> and <span class="math inline">\(300\)</span> (<strong>Figure 5</strong>). Comparing the results with the control (random peak sequences), the motifs discovered had significance scores in average of <span class="math inline">\(12\)</span>.</p>
+<div class="figure" style="text-align: center">
+<img src="figures/unnamed-chunk-5-1.png" alt="Discovered motifs finded with oligo-analysis and position-analysis. Significance of 143, 300, respectively." width="960" />
+<p class="caption">
+Discovered motifs finded with oligo-analysis and position-analysis. Significance of 143, 300, respectively.
+</p>
+</div>
+</div>
+<div id="discovered-motifs-with-motif-comparison" class="section level4">
+<h4>Discovered motifs (with motif comparison)</h4>
+<p>The motifs found with motif comparison with a high significance (bold red) fulfill the property of being extensions of the reference motifs (in total <span class="math inline">\(9\)</span> motifs). Among the non-significant motifs is the one found in the <strong>Figure 5</strong> that despite not making a match with the reference motifs, it does so with different transcriptional factors. In future work it will be necessary to review in depth the characteristics of these factors to determine their exact relationship.</p>
+</div>
+</div>
+<div id="matrix-quality" class="section level3">
+<h3>Matrix-quality</h3>
+An analysis enrichment motifs was performed to highlight the binding sites in the datasets (i.e. Original peak sequences and random peak sequences), to assess enrichment the <em>matrix-quality</em> tool combines information from scores of theoretical and empirical distributions. As seen in the graph of decreasing cumulative distribution (<strong>Figure 6</strong> first column) the line representing the distribution of the original data set (red line) is above the theoretical (dark blue) and random (light blue) distributions, showing an enrichment - although small - for both motifs. Whereas, when looking at the Receiver Operating Characteristic (ROC) curve (<strong>Figure 6</strong> second column), the distributions can not be clearly differentiated. Although, just to mention, the original distribution seems to remain slightly above the rest. In spite of this, the ROC curve was considered as a bad curve. Concluding that the matrices do not have an enrichment in the original data set.<br />
+
+<div class="figure" style="text-align: center">
+<img src="figures/unnamed-chunk-6-1.png" alt="Decreasing cumulative distribution (CDF, logarithmic Y axis) and ROC curve (logarithmic X axis). Position as figure 4." width="960" />
+<p class="caption">
+Decreasing cumulative distribution (CDF, logarithmic Y axis) and ROC curve (logarithmic X axis). Position as figure 4.
+</p>
+</div>
+</div>
+</div>
+<div id="conclusions-and-perspectives" class="section level2">
+<h2>Conclusions and perspectives</h2>
+<p>In the research a pipeline is developed to characterize TF binding sites in sequences from ChIP-seq experiments. The method combines the use of transfac reference matrices together with databases of TF-binding sites with the aim of identifying motifs through algorithms such as <em>oligo-analysis</em> and <em>positional-analysis</em> (de novo discovery), and then comparing it against those that they reside in the databases and the reference motifs.<br />
+The result of the workflow for the ChIP-seq peaks for the OTX2 transcription factor found nine extended versions of the reference motifs, and two motifs that could be candidates as binding sites for the factor under study. However, the properties belonging to the factors that matched them have not yet been examined and will need to be taken into account in future research.<br />
+In future pipelines for the discovery of motifs it could be interesting to test clustering algorithms of the discovered motifs to eliminate redundancy if they exist, in addition to add some other negative control such as the permutation of the reference matrices and ensure the possible effect of the Markov model in the discovery algorithms. On the other hand the use of neural networks for the prediction of genomic characteristics has had a great boom in the current era, so it would not be wrong to take it as a promising new approach and see what happens.</p>
+</div>
+<div id="supplementary-material" class="section level2">
+<h2>Supplementary material</h2>
+<p>All the data and scripts used for this research are available on the <a href="https://github.com/jvelez-lcg/chip-seq">github</a> platform. So you can <em>clone</em> the repository in your own directory.</p>
+<p>Copy and paste this line in your terminal:</p>
+<ul>
+<li>git clone <a href="https://github.com/jvelez-lcg/chip-seq.git" class="uri">https://github.com/jvelez-lcg/chip-seq.git</a></li>
+</ul>
+<p><strong>Note</strong>: all the paths specified in this section are relative to the cloned directory.</p>
+<p>Questions and clarifications: <a href="mailto:jvelez@lcg.unam.mx">jvelez@lcg.unam.mx</a></p>
+<div id="bioinformatics-resources-used-for-this-work" class="section level3">
+<h3>Bioinformatics resources used for this work</h3>
+<table>
+<caption>Bioinformatics Sources.</caption>
+<colgroup>
+<col width="11%" />
+<col width="61%" />
+<col width="27%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Acronym</th>
+<th align="center">Description</th>
+<th align="center">URL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">RSAT Metazoa</td>
+<td align="center">Regulatory Sequence Analysis Tools Metazoa</td>
+<td align="center"><a href="http://metazoa.rsat.eu/" class="uri">http://metazoa.rsat.eu/</a></td>
+</tr>
+<tr class="even">
+<td align="center">ReMap</td>
+<td align="center">A database of ChIP-seq peaks</td>
+<td align="center"><a href="http://remap.cisreg.eu/" class="uri">http://remap.cisreg.eu/</a></td>
+</tr>
+<tr class="odd">
+<td align="center">Jaspar</td>
+<td align="center">A database of eukaryote TF binding motifs, mainly built from CHIP-seq peaks</td>
+<td align="center"><a href="http://jaspar.genereg.net/" class="uri">http://jaspar.genereg.net/</a></td>
+</tr>
+<tr class="even">
+<td align="center">Hocomoco</td>
+<td align="center">A database of Human TF binding motifs, mainly built from CHIP-seq peaks</td>
+<td align="center"><a href="http://hocomoco11.autosome.ru/" class="uri">http://hocomoco11.autosome.ru/</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="data-sources" class="section level3">
+<h3>Data sources</h3>
+<table>
+<caption>Data Sources.</caption>
+<thead>
+<tr class="header">
+<th align="center">Data</th>
+<th align="center">Source/Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Factor</td>
+<td align="center">OTX2</td>
+</tr>
+<tr class="even">
+<td align="center">Tissue/Cell type</td>
+<td align="center">Retinal</td>
+</tr>
+<tr class="odd">
+<td align="center">Remap entry</td>
+<td align="center"><a href="http://pedagogix-tagc.univ-mrs.fr/remap/factor.php?TF=OTX2&amp;page=overview">OTX2</a></td>
+</tr>
+<tr class="even">
+<td align="center">Peaks</td>
+<td align="center"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60024">GSE60024</a></td>
+</tr>
+<tr class="odd">
+<td align="center">Jaspar matrix</td>
+<td align="center"><a href="http://jaspar.genereg.net/matrix/MA0712.1/">MA0712.1</a></td>
+</tr>
+<tr class="even">
+<td align="center">Hocomoco matrix</td>
+<td align="center"><a href="http://hocomoco11.autosome.ru/motif/OTX2_HUMAN.H11MO.0.A">M01444</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="complete-list-of-commands-and-parameters" class="section level3">
+<h3>Complete list of commands and parameters</h3>
+<div id="parameters-rsat-command-line" class="section level4">
+<h4>Parameters RSAT Command Line</h4>
+<p>Parameters needed to download the genomic coordinates of the OTX2 factor, recover its sequences and generate negative control.</p>
+<table>
+<caption>RSAT command line parameters.</caption>
+<thead>
+<tr class="header">
+<th align="center">Parameter</th>
+<th align="center">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">factor</td>
+<td align="center">OTX2</td>
+</tr>
+<tr class="even">
+<td align="center">bed_url</td>
+<td align="center"><a href="http://pedagogix-tagc.univ-mrs.fr/remap/download/remap2018/hg38/MACS/all_tf/OTX2/remap2018_OTX2_all_macs2_hg38_v1_2.bed.gz">url</a></td>
+</tr>
+<tr class="odd">
+<td align="center">genome</td>
+<td align="center">hg38</td>
+</tr>
+<tr class="even">
+<td align="center">format</td>
+<td align="center">UCSC</td>
+</tr>
+<tr class="odd">
+<td align="center">organism</td>
+<td align="center">Homo_sapiens_GRCh38</td>
+</tr>
+<tr class="even">
+<td align="center">bed</td>
+<td align="center">factor.bed</td>
+</tr>
+<tr class="odd">
+<td align="center">bed_fasta</td>
+<td align="center">factor.fasta</td>
+</tr>
+<tr class="even">
+<td align="center">bed_rand_fasta</td>
+<td align="center">factor.random_genome_fragments.fasta</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Download bed file of transcription factor.<br />
+<code>wget -O $bed.gz $bed_url &amp;&amp; try gunzip $bed.gz</code><br />
+</li>
+<li>RSAT - fetch-sequence.<br />
+<code>fetch-sequences  -v 1 -genome $genome -header_format $format -i $bed -o $bed_fasta</code><br />
+</li>
+<li>RSAT - random genome fragments<br />
+<code>random-genome-fragments -i $bed_fasta -org $organism  -return seq  -o $bed_rand_fasta</code></li>
+</ul>
+<p>See documentation of <code>./chip_seq/get_requirements_for_the_RSAT_page.sh</code> file.</p>
+</div>
+<div id="parameters-to-download-transfact-matrixs" class="section level4">
+<h4>Parameters to download transfact matrixs</h4>
+<table>
+<caption>Custom script parameters.</caption>
+<thead>
+<tr class="header">
+<th align="center">Parameter</th>
+<th align="center">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">pythonf</td>
+<td align="center">python get_transfac_matrix_from_RSAT.py</td>
+</tr>
+<tr class="even">
+<td align="center">tranfact_queries</td>
+<td align="center">transfac_queries.csv</td>
+</tr>
+<tr class="odd">
+<td align="center">outtype</td>
+<td align="center">all</td>
+</tr>
+<tr class="even">
+<td align="center">outpath</td>
+<td align="center">./</td>
+</tr>
+<tr class="odd">
+<td align="center">sep</td>
+<td align="center">,</td>
+</tr>
+</tbody>
+</table>
+<p>See documentation of <code>./chip_seq/get_requirements_for_the_RSAT_page.sh</code> file.<br />
+See documentation of <code>./chip_seq/get_transfac_matrix_from_RSAT.py</code> file.</p>
+<ul>
+<li>Download transfac matrix from queries file.<br />
+<code>python get_transfac_matrix_from_RSAT.py -i transfac_queries.csv -o motifs</code></li>
+</ul>
+</div>
+<div id="parameters-rsat-web---peak-motifs" class="section level4">
+<h4>Parameters RSAT web - peak-motifs</h4>
+<p>Files used:</p>
+<ul>
+<li><code>OTX2.fasta</code></li>
+<li><code>OTX2.random_genome_fragments_hg38.fasta</code></li>
+<li><code>OTX2_reference_motifs.tf</code></li>
+</ul>
+<p>Compare motifs with databases:</p>
+<ul>
+<li><code>JASPAR core nonredundant vertebrates (2018)</code></li>
+<li><code>Hocomoco (HUMAN TFs) (2017-10)</code></li>
+</ul>
+<p>Results available in:</p>
+<ul>
+<li>Original data: <code>./chip_seq/rsat_web/peak-motifs_OTX2_original.html</code>.</li>
+<li>Negative control: <code>./chip_seq/rsat_web/peak-motifs_OTX2_random.html</code>.</li>
+</ul>
+</div>
+<div id="parameters-rsat-web---matrix-quality" class="section level4">
+<h4>Parameters RSAT web - matrix-quality</h4>
+<p>Files used:</p>
+<ul>
+<li><code>OTX2_reference_motifs.tf</code></li>
+<li><code>OTX2.fasta</code></li>
+<li><code>OTX2.random_genome_fragments_hg38.fasta</code></li>
+</ul>
+<p>Background:</p>
+<ul>
+<li><code>Markov order = 3</code></li>
+<li><code>Organism = Homo sapiens GRCh38</code></li>
+</ul>
+<p>Result available in:</p>
+<ul>
+<li>Result: <code>./chip_seq/rsat_web/matrix-quality_result.html</code></li>
+</ul>
+</div>
+<div id="motif-comparisons-graphs" class="section level4">
+<h4>Motif comparisons graphs</h4>
+<p>Results availabe in:</p>
+<ul>
+<li>Result_ <code>./chip_seq/Cytoscape/</code></li>
+</ul>
+<hr />
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

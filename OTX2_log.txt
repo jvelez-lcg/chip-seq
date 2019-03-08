@@ -1,0 +1,23 @@
+; fetch-sequences  -v 1 -genome hg38 -header_format galaxy -i OTX2.bed -o OTX2.fasta
+; Program version       	1.34
+; Genome                	hg38
+; DAS server URL        	http://genome.cse.ucsc.edu/cgi-bin/das/hg38
+; Reference             	segment
+; Upstream extension    	0
+; Downstream extension  	0
+; Invalid rows in query file	0
+; Input files
+;	input        	OTX2.bed
+; Output files
+;	log          	OTX2_log.txt
+;	output       	OTX2.fasta
+; sequences           	15952
+; length sum          	3951214
+; Host name	tepeu.lcg.unam.mx
+; Job started	2019-03-02.202658
+; Job done	2019-03-02.202716
+; Seconds	3.7
+;	user	3.7
+;	system	0.28
+;	cuser	0
+;	csystem	0
