@@ -4,15 +4,9 @@ subtitle: "LCG BEII personal work -- 2019"
 author: "Jesús Vélez Santiago: jvelez@lcg.unam.mx"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    fig_caption: yes
-    highlight: zenburn
-    toc: yes
-    toc_depth: 4
-  word_document: default
   html_document:
-    df_print: paged
-    code_folding: hide
+    #df_print: paged
+    #code_folding: hide
     self_contained: no
     fig_caption: yes
     highlight: zenburn
@@ -20,6 +14,12 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
+  word_document: default
+  pdf_document:
+    fig_caption: yes
+    highlight: zenburn
+    toc: yes
+    toc_depth: 4
 urlcolor: blue
 ---
 
@@ -213,7 +213,7 @@ Table: RSAT command line parameters.
 + RSAT - random genome fragments  
 `random-genome-fragments -i $bed_fasta -org $organism  -return seq  -o $bed_rand_fasta`  
 
-See documentation of `./chip_seq/get_requirements_for_the_RSAT_page.sh` file.  
+See documentation of `./chip-seq/get_requirements_for_the_RSAT_page.sh` file.  
 
 #### Parameters to download transfact matrixs
 
@@ -227,8 +227,8 @@ See documentation of `./chip_seq/get_requirements_for_the_RSAT_page.sh` file.
 
 Table: Custom script parameters.
 
-See documentation of `./chip_seq/get_requirements_for_the_RSAT_page.sh` file.  
-See documentation of `./chip_seq/get_transfac_matrix_from_RSAT.py` file.  
+See documentation of `./chip-seq/get_requirements_for_the_RSAT_page.sh` file.  
+See documentation of `./chip-seq/get_transfac_matrix_from_RSAT.py` file.  
 
 + Download transfac matrix from queries file.  
 ```python get_transfac_matrix_from_RSAT.py -i transfac_queries.csv -o motifs```
@@ -247,8 +247,8 @@ Compare motifs with databases:
 
 Results available in:  
 
-+ Original data: `./chip_seq/rsat_web/peak-motifs_OTX2_original.html`.
-+ Negative control: `./chip_seq/rsat_web/peak-motifs_OTX2_random.html`.
++ Original data: `./chip-seq/rsat_web/peak-motifs_OTX2_original.html`.
++ Negative control: `./chip-seq/rsat_web/peak-motifs_OTX2_random.html`.
 
 #### Parameters RSAT web - matrix-quality  
 Files used:  
@@ -265,13 +265,13 @@ Background:
   
 Result available in:  
 
-+ Result: `./chip_seq/rsat_web/matrix-quality_result.html`
++ Result: `./chip-seq/rsat_web/matrix-quality_result.html`
 
 #### Motif comparisons graphs
 
 Results availabe in:  
 
-+ Result_ `./chip_seq/Cytoscape/`  
++ Result_ `./chip-seq/Cytoscape/`  
   
   
 * * * * * * *
